@@ -1,5 +1,5 @@
-
-import React, aistudio, { useState, useCallback, useEffect } from 'react';
+// FIX: Corrected React import statement. `aistudio` is not a React export, and React hooks need to be correctly imported.
+import React, { useState, useCallback, useEffect } from 'react';
 import { PromptInput } from './components/PromptInput';
 import { AiResponseCard } from './components/AiResponseCard';
 import { Header } from './components/Header';
@@ -17,23 +17,39 @@ const initialResponses: Record<AiEngineId, ApiResponse> = {
     perplexity: initialResponseState,
 };
 
+// FIX: This function ensures the initial theme respects localStorage and system preference, preventing a flicker on load.
+const getInitialTheme = (): Theme => {
+    if (typeof window !== 'undefined') {
+        const storedTheme = localStorage.getItem('theme');
+        if (storedTheme === 'light' || storedTheme === 'dark') {
+            return storedTheme;
+        }
+        if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+            return 'light';
+        }
+    }
+    return 'dark';
+};
+
 const App: React.FC = () => {
     const [prompt, setPrompt] = useState<string>('');
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [responses, setResponses] = useState<Record<AiEngineId, ApiResponse>>(initialResponses);
     const [loadingStates, setLoadingStates] = useState<Record<AiEngineId, boolean>>({ gemini: false, claude: false, grok: false, perplexity: false });
 
-    const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('theme') as Theme) || 'dark');
+    const [theme, setTheme] = useState<Theme>(getInitialTheme);
     const [language, setLanguage] = useState<Language>(() => (localStorage.getItem('language') as Language) || 'en');
     const [isSettingsOpen, setSettingsOpen] = useState(false);
 
     useEffect(() => {
         const root = window.document.documentElement;
+        // Apply the theme class to the root element
         if (theme === 'dark') {
             root.classList.add('dark');
         } else {
             root.classList.remove('dark');
         }
+        // Persist the theme choice to localStorage
         localStorage.setItem('theme', theme);
     }, [theme]);
 
@@ -64,7 +80,9 @@ const App: React.FC = () => {
                 setResponses(prev => ({ ...prev, [engine.id]: result }));
             } catch (error) {
                 console.error(`Error fetching response from ${engine.name}:`, error);
-                const errorResponse = error instanceof Object && 'text' in error ? error as ApiResponse : { text: t('errorFetch'), sources: [] };
+                // FIX: Improved type guarding for caught errors, which are of type `unknown` by default in TypeScript.
+                // Using Object.prototype.hasOwnProperty.call is a safer way to check for property existence on unknown objects.
+                const errorResponse = (error && typeof error === 'object' && Object.prototype.hasOwnProperty.call(error, 'text')) ? error as ApiResponse : { text: t('errorFetch'), sources: [] };
                 setResponses(prev => ({ ...prev, [engine.id]: errorResponse }));
             } finally {
                 setLoadingStates(prev => ({ ...prev, [engine.id]: false }));
