@@ -1,13 +1,12 @@
 
-import React, { Fragment } from 'react';
+
+import React from 'react';
 import { languages } from '../locales';
 import type { Language, Theme } from '../types';
 
 interface SettingsModalProps {
     isOpen: boolean;
     onClose: () => void;
-    theme: Theme;
-    setTheme: (theme: Theme) => void;
     language: Language;
     setLanguage: (lang: Language) => void;
     t: (key: string) => string;
@@ -16,8 +15,6 @@ interface SettingsModalProps {
 export const SettingsModal: React.FC<SettingsModalProps> = ({
     isOpen,
     onClose,
-    theme,
-    setTheme,
     language,
     setLanguage,
     t
@@ -41,15 +38,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </div>
 
                 <div className="p-6 space-y-6">
-                    {/* Theme Settings */}
-                    <div className="space-y-2">
-                        <label className="text-lg font-semibold">{t('theme')}</label>
-                        <div className="flex gap-2 rounded-lg bg-gray-100 dark:bg-gray-900 p-1">
-                            <button onClick={() => setTheme('light')} className={`w-full py-2 rounded-md transition-colors ${theme === 'light' ? 'bg-white dark:bg-gray-700 shadow' : 'hover:bg-gray-200/50 dark:hover:bg-gray-700/50'}`}>{t('light')}</button>
-                            <button onClick={() => setTheme('dark')} className={`w-full py-2 rounded-md transition-colors ${theme === 'dark' ? 'bg-white dark:bg-gray-700 shadow' : 'hover:bg-gray-200/50 dark:hover:bg-gray-700/50'}`}>{t('dark')}</button>
-                        </div>
-                    </div>
-
                     {/* Language Settings */}
                      <div className="space-y-2">
                         <label htmlFor="language-select" className="text-lg font-semibold">{t('language')}</label>

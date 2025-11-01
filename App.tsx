@@ -1,3 +1,5 @@
+
+
 // FIX: Corrected React import statement. `aistudio` is not a React export, and React hooks need to be correctly imported.
 import React, { useState, useCallback, useEffect } from 'react';
 import { PromptInput } from './components/PromptInput';
@@ -7,7 +9,8 @@ import { SettingsModal } from './components/SettingsModal';
 import { generateGroundedResponse } from './services/geminiService';
 import { AI_ENGINES } from './constants';
 import { locales } from './locales';
-import type { AiEngineId, Language, Theme, ApiResponse } from './types';
+// FIX: Added Source to imports to be used in the error handler.
+import type { AiEngineId, Language, Theme, ApiResponse, Source } from './types';
 
 const initialResponseState: ApiResponse = { text: '', sources: [] };
 const initialResponses: Record<AiEngineId, ApiResponse> = {
@@ -77,9 +80,21 @@ const App: React.FC = () => {
                 setResponses(prev => ({ ...prev, [engine.id]: result }));
             } catch (error) {
                 console.error(`Error fetching response from ${engine.name}:`, error);
-                // FIX: Improved type guarding for caught errors, which are of type `unknown` by default in TypeScript.
-                // Using the 'in' operator provides a type-safe way to check for property existence.
-                const errorResponse = (error && typeof error === 'object' && 'text' in error) ? error as ApiResponse : { text: t('errorFetch'), sources: [] };
+                // FIX: Replaced the potentially unsafe type assertion with a robust type guard to safely handle `unknown` error types.
+                // This approach checks for the existence and type of properties before accessing them.
+                const errorResponse: ApiResponse = { text: t('errorFetch'), sources: [] };
+                if (error instanceof Error) {
+                    errorResponse.text = error.message;
+                } else if (error && typeof error === 'object') {
+                    // FIX: Updated error handling to safely access properties on the unknown error object by casting to a partial ApiResponse. This resolves potential TypeScript errors.
+                    const potentialError = error as Partial<ApiResponse>;
+                    if (typeof potentialError.text === 'string') {
+                        errorResponse.text = potentialError.text;
+                    }
+                    if (Array.isArray(potentialError.sources)) {
+                        errorResponse.sources = potentialError.sources;
+                    }
+                }
                 setResponses(prev => ({ ...prev, [engine.id]: errorResponse }));
             } finally {
                 setLoadingStates(prev => ({ ...prev, [engine.id]: false }));
@@ -131,6 +146,8 @@ const App: React.FC = () => {
             <div className="max-w-7xl mx-auto">
                 <Header 
                     onSettingsClick={() => setSettingsOpen(true)}
+                    theme={theme}
+                    setTheme={setTheme}
                     t={t}
                 />
                 
@@ -169,8 +186,6 @@ const App: React.FC = () => {
             <SettingsModal
                 isOpen={isSettingsOpen}
                 onClose={() => setSettingsOpen(false)}
-                theme={theme}
-                setTheme={setTheme}
                 language={language}
                 setLanguage={setLanguage}
                 t={t}

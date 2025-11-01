@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -16,11 +16,9 @@
       }
     </script>
     <script>
-      // Prevents theme flicker on page load. Defaults to dark unless 'light' is stored.
-      if (localStorage.theme === 'light') {
-        document.documentElement.classList.remove('dark')
-      } else {
-        document.documentElement.classList.add('dark')
+      // Prevents theme flicker on page load. Defaults to dark.
+      if (localStorage.getItem('theme') !== 'light') {
+        document.documentElement.classList.add('dark');
       }
     </script>
   </head>
