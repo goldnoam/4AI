@@ -1,0 +1,5 @@
+{
+  "name": "AI Engine Arena",
+  "description": "A web application that takes a user's prompt and sends it to four simulated AI engines (Gemini, ChatGPT, Grok, Perplexity) simultaneously, displaying their generated responses in real-time.",
+  "requestFramePermissions": []
+}
