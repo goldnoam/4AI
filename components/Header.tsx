@@ -22,7 +22,7 @@ export const Header: React.FC<HeaderProps> = ({ onSettingsClick, t }) => {
             <p className="mt-2 text-lg text-gray-500 dark:text-gray-400">{t('subtitle')}</p>
             <button
                 onClick={onSettingsClick}
-                className="absolute top-0 right-0 p-2 rounded-full text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
+                className="absolute top-0 end-0 p-2 rounded-full text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
                 aria-label="Settings"
             >
                 <SettingsIcon />

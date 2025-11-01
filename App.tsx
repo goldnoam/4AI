@@ -26,6 +26,11 @@ const App: React.FC = () => {
 
     useEffect(() => {
         localStorage.setItem('language', language);
+        if (language === 'he') {
+            document.documentElement.setAttribute('dir', 'rtl');
+        } else {
+            document.documentElement.setAttribute('dir', 'ltr');
+        }
     }, [language]);
 
     const t = useCallback((key: string) => {

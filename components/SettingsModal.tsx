@@ -44,8 +44,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     <div className="space-y-2">
                         <label className="text-lg font-semibold">{t('theme')}</label>
                         <div className="flex gap-2 rounded-lg bg-gray-100 dark:bg-gray-900 p-1">
-                            <button onClick={() => setTheme('light')} className={`w-full py-2 rounded-md transition-colors ${theme === 'light' ? 'bg-white dark:bg-gray-700 shadow' : ''}`}>{t('light')}</button>
-                            <button onClick={() => setTheme('dark')} className={`w-full py-2 rounded-md transition-colors ${theme === 'dark' ? 'bg-white dark:bg-gray-700 shadow' : ''}`}>{t('dark')}</button>
+                            <button onClick={() => setTheme('light')} className={`w-full py-2 rounded-md transition-colors ${theme === 'light' ? 'bg-white dark:bg-gray-700 shadow' : 'hover:bg-gray-200/50 dark:hover:bg-gray-700/50'}`}>{t('light')}</button>
+                            <button onClick={() => setTheme('dark')} className={`w-full py-2 rounded-md transition-colors ${theme === 'dark' ? 'bg-white dark:bg-gray-700 shadow' : 'hover:bg-gray-200/50 dark:hover:bg-gray-700/50'}`}>{t('dark')}</button>
                         </div>
                     </div>
 

@@ -33,7 +33,7 @@ export const PromptInput: React.FC<PromptInputProps> = ({ prompt, setPrompt, onS
             <button
                 onClick={() => onSubmit(prompt)}
                 disabled={isLoading || !prompt.trim()}
-                className="w-full sm:w-auto self-end px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-pink-500"
+                className="w-full sm:w-auto sm:ms-auto px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-pink-500"
             >
                 {isLoading ? t('generatingButton') : t('submitButton')}
             </button>
