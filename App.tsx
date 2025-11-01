@@ -1,18 +1,26 @@
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, aistudio, { useState, useCallback, useEffect } from 'react';
 import { PromptInput } from './components/PromptInput';
 import { AiResponseCard } from './components/AiResponseCard';
 import { Header } from './components/Header';
 import { SettingsModal } from './components/SettingsModal';
-import { generateResponse } from './services/geminiService';
+import { generateGroundedResponse } from './services/geminiService';
 import { AI_ENGINES } from './constants';
 import { locales } from './locales';
-import type { AiEngineId, Language, Theme } from './types';
+import type { AiEngineId, Language, Theme, ApiResponse } from './types';
+
+const initialResponseState: ApiResponse = { text: '', sources: [] };
+const initialResponses: Record<AiEngineId, ApiResponse> = {
+    gemini: initialResponseState,
+    claude: initialResponseState,
+    grok: initialResponseState,
+    perplexity: initialResponseState,
+};
 
 const App: React.FC = () => {
     const [prompt, setPrompt] = useState<string>('');
     const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [responses, setResponses] = useState<Record<AiEngineId, string>>({ gemini: '', claude: '', grok: '', perplexity: '' });
+    const [responses, setResponses] = useState<Record<AiEngineId, ApiResponse>>(initialResponses);
     const [loadingStates, setLoadingStates] = useState<Record<AiEngineId, boolean>>({ gemini: false, claude: false, grok: false, perplexity: false });
 
     const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('theme') as Theme) || 'dark');
@@ -21,7 +29,11 @@ const App: React.FC = () => {
 
     useEffect(() => {
         const root = window.document.documentElement;
-        root.classList.toggle('dark', theme === 'dark');
+        if (theme === 'dark') {
+            root.classList.add('dark');
+        } else {
+            root.classList.remove('dark');
+        }
         localStorage.setItem('theme', theme);
     }, [theme]);
 
@@ -43,20 +55,17 @@ const App: React.FC = () => {
 
         setIsLoading(true);
         setPrompt(userPrompt);
-        setResponses({ gemini: '', claude: '', grok: '', perplexity: '' });
+        setResponses(initialResponses);
         setLoadingStates({ gemini: true, claude: true, grok: true, perplexity: true });
 
         const requests = AI_ENGINES.map(async (engine) => {
             try {
-                const stream = await generateResponse(userPrompt, engine.simulationPrompt);
-                let fullResponse = '';
-                for await (const chunk of stream) {
-                    fullResponse += chunk;
-                    setResponses(prev => ({ ...prev, [engine.id]: fullResponse }));
-                }
+                const result = await generateGroundedResponse(userPrompt, engine.simulationPrompt);
+                setResponses(prev => ({ ...prev, [engine.id]: result }));
             } catch (error) {
                 console.error(`Error fetching response from ${engine.name}:`, error);
-                setResponses(prev => ({ ...prev, [engine.id]: t('errorFetch') }));
+                const errorResponse = error instanceof Object && 'text' in error ? error as ApiResponse : { text: t('errorFetch'), sources: [] };
+                setResponses(prev => ({ ...prev, [engine.id]: errorResponse }));
             } finally {
                 setLoadingStates(prev => ({ ...prev, [engine.id]: false }));
             }
@@ -74,8 +83,16 @@ const App: React.FC = () => {
         content += `**Prompt:**\n\`\`\`\n${prompt}\n\`\`\`\n\n---\n\n`;
 
         AI_ENGINES.forEach(engine => {
+            const response = responses[engine.id];
             content += `## ${engine.name}\n\n`;
-            content += `${responses[engine.id] || 'No response generated.'}\n\n`;
+            content += `${response.text || 'No response generated.'}\n\n`;
+            if (response.sources.length > 0) {
+                content += `### Sources\n`;
+                response.sources.forEach(source => {
+                    content += `- [${source.title || source.uri}](${source.uri})\n`;
+                });
+                content += `\n`;
+            }
             content += `---\n\n`;
         });
 
@@ -92,8 +109,7 @@ const App: React.FC = () => {
         URL.revokeObjectURL(url);
     }, [responses, prompt]);
 
-    // Fix: Add a type guard to ensure the response is a string before calling trim().
-    const hasResponses = Object.values(responses).some(r => typeof r === 'string' && r.trim().length > 0);
+    const hasResponses = Object.values(responses).some(r => r.text && r.text.trim().length > 0);
 
     return (
         <div className="min-h-screen font-sans p-4 sm:p-6 lg:p-8">

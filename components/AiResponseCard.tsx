@@ -1,10 +1,10 @@
 import React, { useEffect, useRef } from 'react';
-import type { AiEngine } from '../types';
+import type { AiEngine, ApiResponse } from '../types';
 
 interface AiResponseCardProps {
     engine: AiEngine;
     isLoading: boolean;
-    response: string;
+    response: ApiResponse;
 }
 
 const LoadingSkeleton: React.FC = () => (
@@ -19,9 +19,10 @@ const LoadingSkeleton: React.FC = () => (
 export const AiResponseCard: React.FC<AiResponseCardProps> = ({ engine, isLoading, response }) => {
     const cardBodyRef = useRef<HTMLDivElement>(null);
 
+    // Auto-scroll to top when a new response is loaded
     useEffect(() => {
         if (cardBodyRef.current) {
-            cardBodyRef.current.scrollTop = cardBodyRef.current.scrollHeight;
+            cardBodyRef.current.scrollTop = 0;
         }
     }, [response]);
     
@@ -32,10 +33,33 @@ export const AiResponseCard: React.FC<AiResponseCardProps> = ({ engine, isLoadin
                 <h2 className="text-xl font-bold">{engine.name}</h2>
             </div>
             <div ref={cardBodyRef} className="p-6 overflow-y-auto flex-grow prose prose-sm sm:prose-base dark:prose-invert prose-p:text-gray-600 dark:prose-p:text-gray-300 prose-headings:text-gray-900 dark:prose-headings:text-gray-100 prose-strong:text-black dark:prose-strong:text-white max-w-none">
-                {isLoading && !response ? (
+                {isLoading ? (
                     <LoadingSkeleton />
                 ) : (
-                    <div className="whitespace-pre-wrap break-words">{response}</div>
+                    <>
+                        <div className="whitespace-pre-wrap break-words">{response.text}</div>
+                        {response.sources && response.sources.length > 0 && (
+                            <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
+                                <h4 className="font-bold text-sm uppercase tracking-wider mb-2">Sources</h4>
+                                <ul className="list-none p-0 space-y-2 text-xs">
+                                    {response.sources.map((source, index) => (
+                                        <li key={index} className="flex items-start gap-2">
+                                            <span className="text-gray-400 dark:text-gray-500">[{index + 1}]</span>
+                                            <a 
+                                                href={source.uri} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer" 
+                                                className="text-purple-600 dark:text-purple-400 hover:underline truncate"
+                                                title={source.title}
+                                            >
+                                                {source.title || source.uri}
+                                            </a>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </div>

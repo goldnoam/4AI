@@ -1,7 +1,5 @@
-
-
-// Fix: Import GenerateContentResponse for stronger type safety.
-import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
+import type { ApiResponse, Source } from '../types';
 
 if (!process.env.API_KEY) {
     throw new Error("API_KEY environment variable not set");
@@ -9,25 +7,30 @@ if (!process.env.API_KEY) {
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-// Fix: Use GenerateContentResponse to type the stream parameter.
-async function* streamToGenerator(stream: AsyncGenerator<GenerateContentResponse, any, any>) {
-    for await (const chunk of stream) {
-        yield chunk.text;
-    }
-}
-
-export const generateResponse = async (prompt: string, systemInstruction: string): Promise<AsyncGenerator<string, void, unknown>> => {
+export const generateGroundedResponse = async (prompt: string, systemInstruction: string): Promise<ApiResponse> => {
     try {
-        const stream = await ai.models.generateContentStream({
+        const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: prompt,
             config: {
                 systemInstruction: systemInstruction,
+                tools: [{ googleSearch: {} }],
             },
         });
-        return streamToGenerator(stream);
+
+        const text = response.text;
+        const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+        
+        const sources: Source[] = groundingChunks
+            .map((chunk: any) => chunk.web)
+            .filter((web: any): web is Source => web && web.uri);
+
+        return { text, sources };
     } catch (error) {
         console.error("Error generating content:", error);
-        throw error;
+        throw { 
+            text: "An error occurred while generating the response. Please check the console for details.", 
+            sources: [] 
+        };
     }
 };
