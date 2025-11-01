@@ -103,13 +103,14 @@ const App: React.FC = () => {
                 if (error instanceof Error) {
                     errorResponse.text = error.message;
                 } else if (error && typeof error === 'object') {
-                    // FIX: Use type guards to safely access properties on the unknown error object, resolving 'Property does not exist on type unknown' errors.
-                    if ('text' in error && typeof (error as { text?: unknown }).text === 'string') {
-                        errorResponse.text = (error as { text: string }).text;
+                    // FIX: Use type assertion to Record<string, unknown> to safely access properties on the unknown error object, resolving 'Property does not exist on type unknown' errors.
+                    const errorObj = error as Record<string, unknown>;
+                    if (typeof errorObj.text === 'string') {
+                        errorResponse.text = errorObj.text;
                     }
-                    if ('sources' in error && Array.isArray((error as { sources?: unknown }).sources)) {
+                    if (Array.isArray(errorObj.sources)) {
                         // Assuming the sources array contains valid Source objects.
-                        errorResponse.sources = (error as { sources: Source[] }).sources;
+                        errorResponse.sources = errorObj.sources as Source[];
                     }
                 }
                 setResponses(prev => ({ ...prev, [engine.id]: errorResponse }));

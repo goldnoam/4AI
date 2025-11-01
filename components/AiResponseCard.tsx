@@ -27,7 +27,7 @@ export const AiResponseCard: React.FC<AiResponseCardProps> = ({ engine, isLoadin
     }, [response]);
     
     return (
-        <div className={`bg-gray-50 dark:bg-gray-800/50 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col h-[500px] transition-colors duration-300`}>
+        <div className={`bg-gray-50 dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col h-[500px] transition-colors duration-300`}>
             <div className={`flex items-center gap-3 p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r ${engine.color} text-white`}>
                 {engine.logo}
                 <h2 className="text-xl font-bold">{engine.name}</h2>
@@ -44,7 +44,7 @@ export const AiResponseCard: React.FC<AiResponseCardProps> = ({ engine, isLoadin
                                 <ul className="list-none p-0 space-y-2 text-xs">
                                     {response.sources.map((source, index) => (
                                         <li key={index} className="flex items-start gap-2">
-                                            <span className="text-gray-400 dark:text-gray-500">[{index + 1}]</span>
+                                            <span className="text-gray-400 dark:text-gray-400">[{index + 1}]</span>
                                             <a 
                                                 href={source.uri} 
                                                 target="_blank" 
