@@ -17,14 +17,11 @@ const initialResponses: Record<AiEngineId, ApiResponse> = {
     perplexity: initialResponseState,
 };
 
-// FIX: This function ensures the initial theme respects localStorage and system preference, preventing a flicker on load.
+// This function sets the initial theme. It defaults to 'dark' unless 'light' is explicitly stored.
 const getInitialTheme = (): Theme => {
     if (typeof window !== 'undefined') {
         const storedTheme = localStorage.getItem('theme');
-        if (storedTheme === 'light' || storedTheme === 'dark') {
-            return storedTheme;
-        }
-        if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+        if (storedTheme === 'light') {
             return 'light';
         }
     }
@@ -81,8 +78,8 @@ const App: React.FC = () => {
             } catch (error) {
                 console.error(`Error fetching response from ${engine.name}:`, error);
                 // FIX: Improved type guarding for caught errors, which are of type `unknown` by default in TypeScript.
-                // Using Object.prototype.hasOwnProperty.call is a safer way to check for property existence on unknown objects.
-                const errorResponse = (error && typeof error === 'object' && Object.prototype.hasOwnProperty.call(error, 'text')) ? error as ApiResponse : { text: t('errorFetch'), sources: [] };
+                // Using the 'in' operator provides a type-safe way to check for property existence.
+                const errorResponse = (error && typeof error === 'object' && 'text' in error) ? error as ApiResponse : { text: t('errorFetch'), sources: [] };
                 setResponses(prev => ({ ...prev, [engine.id]: errorResponse }));
             } finally {
                 setLoadingStates(prev => ({ ...prev, [engine.id]: false }));

@@ -16,8 +16,8 @@
       }
     </script>
     <script>
-      // Prevents theme flicker on page load
-      if (localStorage.theme === 'light' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: light)').matches)) {
+      // Prevents theme flicker on page load. Defaults to dark unless 'light' is stored.
+      if (localStorage.theme === 'light') {
         document.documentElement.classList.remove('dark')
       } else {
         document.documentElement.classList.add('dark')
