@@ -1,5 +1,7 @@
 
-import { GoogleGenAI } from "@google/genai";
+
+// Fix: Import GenerateContentResponse for stronger type safety.
+import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 
 if (!process.env.API_KEY) {
     throw new Error("API_KEY environment variable not set");
@@ -7,7 +9,8 @@ if (!process.env.API_KEY) {
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-async function* streamToGenerator(stream: AsyncGenerator<any, any, any>) {
+// Fix: Use GenerateContentResponse to type the stream parameter.
+async function* streamToGenerator(stream: AsyncGenerator<GenerateContentResponse, any, any>) {
     for await (const chunk of stream) {
         yield chunk.text;
     }

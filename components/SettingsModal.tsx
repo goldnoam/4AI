@@ -1,3 +1,4 @@
+
 import React, { Fragment } from 'react';
 import { languages } from '../locales';
 import type { Language, Theme } from '../types';
@@ -65,9 +66,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     </div>
                 </div>
                 
-                <div className="flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700 rounded-b-xl">
+                <div className="flex justify-start items-center p-4 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700 rounded-b-xl">
                     <button onClick={() => alert('Noam Gold AI 2025')} className="text-sm text-purple-600 dark:text-purple-400 hover:underline">{t('about')}</button>
-                    <a href="mailto:feedback@example.com?subject=Feedback for AI Engine Arena" className="text-sm text-purple-600 dark:text-purple-400 hover:underline">{t('feedback')}</a>
                 </div>
             </div>
         </div>

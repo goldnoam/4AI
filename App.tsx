@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { PromptInput } from './components/PromptInput';
 import { AiResponseCard } from './components/AiResponseCard';
@@ -11,8 +12,8 @@ import type { AiEngineId, Language, Theme } from './types';
 const App: React.FC = () => {
     const [prompt, setPrompt] = useState<string>('');
     const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [responses, setResponses] = useState<Record<AiEngineId, string>>({ gemini: '', chatgpt: '', grok: '', perplexity: '' });
-    const [loadingStates, setLoadingStates] = useState<Record<AiEngineId, boolean>>({ gemini: false, chatgpt: false, grok: false, perplexity: false });
+    const [responses, setResponses] = useState<Record<AiEngineId, string>>({ gemini: '', claude: '', grok: '', perplexity: '' });
+    const [loadingStates, setLoadingStates] = useState<Record<AiEngineId, boolean>>({ gemini: false, claude: false, grok: false, perplexity: false });
 
     const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('theme') as Theme) || 'dark');
     const [language, setLanguage] = useState<Language>(() => (localStorage.getItem('language') as Language) || 'en');
@@ -41,8 +42,9 @@ const App: React.FC = () => {
         if (!userPrompt.trim() || isLoading) return;
 
         setIsLoading(true);
-        setResponses({ gemini: '', chatgpt: '', grok: '', perplexity: '' });
-        setLoadingStates({ gemini: true, chatgpt: true, grok: true, perplexity: true });
+        setPrompt(userPrompt);
+        setResponses({ gemini: '', claude: '', grok: '', perplexity: '' });
+        setLoadingStates({ gemini: true, claude: true, grok: true, perplexity: true });
 
         const requests = AI_ENGINES.map(async (engine) => {
             try {
@@ -64,6 +66,35 @@ const App: React.FC = () => {
         setIsLoading(false);
     }, [isLoading, t]);
 
+    const handleExport = useCallback(() => {
+        const timestamp = new Date().toISOString().replace(/:/g, '-');
+        const filename = `ai-arena-results-${timestamp}.md`;
+        
+        let content = `# AI Engine Arena Results\n\n`;
+        content += `**Prompt:**\n\`\`\`\n${prompt}\n\`\`\`\n\n---\n\n`;
+
+        AI_ENGINES.forEach(engine => {
+            content += `## ${engine.name}\n\n`;
+            content += `${responses[engine.id] || 'No response generated.'}\n\n`;
+            content += `---\n\n`;
+        });
+
+        const blob = new Blob([content], { type: 'text/markdown;charset=utf-8;' });
+        const link = document.createElement("a");
+        
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }, [responses, prompt]);
+
+    // Fix: Add a type guard to ensure the response is a string before calling trim().
+    const hasResponses = Object.values(responses).some(r => typeof r === 'string' && r.trim().length > 0);
+
     return (
         <div className="min-h-screen font-sans p-4 sm:p-6 lg:p-8">
             <div className="max-w-7xl mx-auto">
@@ -79,6 +110,8 @@ const App: React.FC = () => {
                             setPrompt={setPrompt}
                             onSubmit={handleSubmit}
                             isLoading={isLoading}
+                            onExport={handleExport}
+                            hasResponses={hasResponses}
                             t={t}
                         />
                     </div>
@@ -95,8 +128,11 @@ const App: React.FC = () => {
                     </div>
                 </main>
 
-                <footer className="text-center mt-12 text-gray-500 dark:text-gray-400 text-sm">
+                <footer className="text-center mt-12 text-gray-500 dark:text-gray-400 text-sm space-y-2">
                     <p>{t('footer')}</p>
+                    <a href="mailto:gold.noam@gmail.com?subject=Feedback for AI Engine Arena" className="text-purple-600 dark:text-purple-400 hover:underline">
+                        {t('feedback')}
+                    </a>
                 </footer>
             </div>
             <SettingsModal

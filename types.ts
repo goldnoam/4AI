@@ -1,6 +1,6 @@
 import type React from 'react';
 
-export type AiEngineId = 'gemini' | 'chatgpt' | 'grok' | 'perplexity';
+export type AiEngineId = 'gemini' | 'claude' | 'grok' | 'perplexity';
 
 export interface AiEngine {
     id: AiEngineId;
