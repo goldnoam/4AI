@@ -1,5 +1,3 @@
-
-
 // FIX: Corrected React import statement. `aistudio` is not a React export, and React hooks need to be correctly imported.
 import React, { useState, useCallback, useEffect } from 'react';
 import { PromptInput } from './components/PromptInput';
@@ -76,8 +74,27 @@ const App: React.FC = () => {
 
         const requests = AI_ENGINES.map(async (engine) => {
             try {
-                const result = await generateGroundedResponse(userPrompt, engine.simulationPrompt);
-                setResponses(prev => ({ ...prev, [engine.id]: result }));
+                 const onChunk = (text: string) => {
+                    setResponses(prev => ({
+                        ...prev,
+                        [engine.id]: {
+                            sources: prev[engine.id]?.sources || [],
+                            text: (prev[engine.id]?.text || '') + text,
+                        },
+                    }));
+                };
+
+                const onSources = (sources: Source[]) => {
+                     setResponses(prev => ({
+                        ...prev,
+                        [engine.id]: {
+                            text: prev[engine.id]?.text || '',
+                            sources: sources,
+                        },
+                    }));
+                };
+
+                await generateGroundedResponse(userPrompt, engine.simulationPrompt, onChunk, onSources);
             } catch (error) {
                 console.error(`Error fetching response from ${engine.name}:`, error);
                 // FIX: Replaced the potentially unsafe type assertion with a robust type guard to safely handle `unknown` error types.
@@ -86,13 +103,13 @@ const App: React.FC = () => {
                 if (error instanceof Error) {
                     errorResponse.text = error.message;
                 } else if (error && typeof error === 'object') {
-                    // FIX: Updated error handling to safely access properties on the unknown error object by casting to a partial ApiResponse. This resolves potential TypeScript errors.
-                    const potentialError = error as Partial<ApiResponse>;
-                    if (typeof potentialError.text === 'string') {
-                        errorResponse.text = potentialError.text;
+                    // FIX: Use type guards to safely access properties on the unknown error object, resolving 'Property does not exist on type unknown' errors.
+                    if ('text' in error && typeof (error as { text?: unknown }).text === 'string') {
+                        errorResponse.text = (error as { text: string }).text;
                     }
-                    if (Array.isArray(potentialError.sources)) {
-                        errorResponse.sources = potentialError.sources;
+                    if ('sources' in error && Array.isArray((error as { sources?: unknown }).sources)) {
+                        // Assuming the sources array contains valid Source objects.
+                        errorResponse.sources = (error as { sources: Source[] }).sources;
                     }
                 }
                 setResponses(prev => ({ ...prev, [engine.id]: errorResponse }));

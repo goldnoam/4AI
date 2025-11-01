@@ -7,9 +7,14 @@ if (!process.env.API_KEY) {
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-export const generateGroundedResponse = async (prompt: string, systemInstruction: string): Promise<ApiResponse> => {
+export const generateGroundedResponse = async (
+    prompt: string,
+    systemInstruction: string,
+    onChunk: (text: string) => void,
+    onSources: (sources: Source[]) => void
+): Promise<void> => {
     try {
-        const response = await ai.models.generateContent({
+        const stream = await ai.models.generateContentStream({
             model: 'gemini-2.5-flash',
             contents: prompt,
             config: {
@@ -18,14 +23,27 @@ export const generateGroundedResponse = async (prompt: string, systemInstruction
             },
         });
 
-        const text = response.text;
-        const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
-        
-        const sources: Source[] = groundingChunks
-            .map((chunk: any) => chunk.web)
-            .filter((web: any): web is Source => web && web.uri);
+        let sourcesReported = false;
+        for await (const chunk of stream) {
+            const text = chunk.text;
+            if (text) {
+                onChunk(text);
+            }
 
-        return { text, sources };
+            if (!sourcesReported) {
+                const groundingChunks = chunk.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+                if (groundingChunks.length > 0) {
+                    const sources: Source[] = groundingChunks
+                        .map((c: any) => c.web)
+                        .filter((web: any): web is Source => web && web.uri && web.title);
+
+                    if (sources.length > 0) {
+                        onSources(sources);
+                        sourcesReported = true;
+                    }
+                }
+            }
+        }
     } catch (error) {
         console.error("Error generating content:", error);
         throw { 
